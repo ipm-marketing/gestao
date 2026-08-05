@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão do Time · Julho 2026 · IPM Sistemas</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, Helvetica, sans-serif; background: #f5f5f3; color: #1a1a1a; padding: 2rem; font-size: 13px; }
+.container { max-width: 980px; margin: 0 auto; }
+
+.banner { background: #1a3a6b; color: #fff; border-radius: 10px; padding: .8rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.banner strong { font-size: 14px; display: block; }
+.banner span { font-size: 11px; opacity: .78; }
+.btn { padding: 6px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; border: none; }
+.btn-outline { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.5); }
+.btn-outline:hover { background: rgba(255,255,255,.12); }
+
+.header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding-bottom: 1.25rem; border-bottom: 2px solid #1a3a6b; margin-bottom: 1.75rem; flex-wrap: wrap; }
+.header h1 { font-size: 20px; color: #1a3a6b; font-weight: 700; }
+.header p { font-size: 12px; color: #666; margin-top: 3px; }
+.mes-badge { background: #1a3a6b; color: #fff; font-size: 13px; font-weight: 700; padding: 6px 16px; border-radius: 20px; display: inline-block; }
+.resp-line { font-size: 11px; color: #888; margin-top: 5px; text-align: right; }
+
+.sec { font-size: 10px; font-weight: 700; color: #888; letter-spacing: .1em; text-transform: uppercase; margin: 1.75rem 0 .875rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tag { font-size: 9px; padding: 2px 8px; border-radius: 10px; font-weight: 700; text-transform: none; letter-spacing: 0; }
+.tag-ok { background: #EAF3DE; color: #3B6D11; }
+.tag-conf { background: #FCEBEB; color: #A32D2D; }
+
+.kgrid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+.kcard { background: #fff; border-radius: 10px; padding: .875rem 1rem; border: 1px solid #e8e8e6; }
+.klbl { font-size: 11px; color: #888; margin-bottom: 4px; }
+.kval { font-size: 24px; font-weight: 700; color: #1a3a6b; line-height: 1.15; }
+.kdelta { font-size: 11px; color: #aaa; margin-top: 3px; line-height: 1.4; }
+.kdelta.up { color: #3B6D11; font-weight: 700; }
+
+.card { background: #fff; border-radius: 10px; padding: 1rem 1.25rem; border: 1px solid #e8e8e6; }
+.card h3 { font-size: 13px; font-weight: 700; color: #1a3a6b; margin-bottom: .75rem; }
+.card-full { background: #fff; border-radius: 10px; padding: 1rem 1.25rem; border: 1px solid #e8e8e6; margin-bottom: 1.25rem; }
+.card-full h3 { font-size: 13px; font-weight: 700; color: #1a3a6b; margin-bottom: .75rem; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+
+table { width: 100%; font-size: 12px; border-collapse: collapse; }
+th { text-align: left; padding: 6px 8px; color: #888; font-weight: 700; border-bottom: 1px solid #eee; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+td { padding: 7px 8px; border-bottom: 1px solid #f0f0ee; color: #333; vertical-align: middle; }
+tr:last-child td { border: none; }
+td.num, th.num { text-align: right; }
+
+.pill { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.p-alta { background: #EAF3DE; color: #3B6D11; }
+.p-cons { background: #E1F5EE; color: #085041; }
+.p-evol { background: #FAEEDA; color: #854F0B; }
+.p-novo { background: #E6F1FB; color: #185FA5; }
+.p-acomp { background: #FCEBEB; color: #A32D2D; }
+.p-lead { background: #EDEDF5; color: #3d3d6b; }
+
+/* Cards do time */
+.time-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 10px; }
+.pcard { border-radius: 10px; padding: .875rem 1rem; text-align: center; border: 1.5px solid; }
+.pcard .pava { width: 40px; height: 40px; border-radius: 50%; color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto .5rem; }
+.pcard .pnome { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+.pcard .pcargo { font-size: 11px; color: #666; margin-top: 2px; }
+.pcard .pdem { font-size: 11px; color: #888; margin-top: 6px; }
+.pcard .pdem strong { color: #1a3a6b; font-size: 13px; }
+.pcard .pstatus { margin-top: 8px; display: inline-block; }
+.pcard.lead { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; text-align: left; }
+.pcard.lead .pava { margin: 0; flex-shrink: 0; }
+.pcard.lead .pstatus { margin-top: 4px; }
+.pcard.lead .lead-right { margin-left: auto; text-align: right; }
+
+.legenda { display: flex; flex-wrap: wrap; gap: 12px; padding-top: .75rem; border-top: 1px solid #eee; margin-top: .5rem; }
+.legenda div { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #666; }
+.ldot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+/* Movimentações */
+.mov { display: flex; flex-direction: column; gap: 8px; }
+.mov-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 8px; border-left: 4px solid; }
+.mov-item .mico { font-size: 18px; line-height: 1; }
+.mov-item .mlbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+.mov-item .mtit { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+.mov-item .mdsc { font-size: 11px; color: #666; margin-top: 2px; line-height: 1.5; }
+
+/* 1:1 */
+.oneone { display: flex; flex-direction: column; gap: 6px; }
+.oo-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #fafaf9; border-radius: 8px; border: 1px solid #eee; }
+.oo-ini { width: 26px; height: 26px; border-radius: 50%; background: #1a3a6b; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.oo-nome { font-size: 12px; font-weight: 700; color: #1a1a1a; }
+.oo-foco { font-size: 11px; color: #777; }
+.oo-qtd { margin-left: auto; font-size: 11px; font-weight: 700; color: #1a3a6b; white-space: nowrap; }
+
+.nota { font-size: 11px; color: #666; line-height: 1.6; background: #fafaf9; border: 1px solid #eee; border-radius: 8px; padding: 10px 12px; margin-top: 10px; }
+.nota strong { color: #1a3a6b; }
+
+.foot { font-size: 10px; color: #aaa; text-align: center; padding-top: 1rem; border-top: 1px solid #e8e8e6; margin-top: 1.5rem; line-height: 1.6; }
+
+@media (max-width: 720px) {
+  body { padding: 1rem; }
+  .kgrid-4 { grid-template-columns: repeat(2, 1fr); }
+  .two-col { grid-template-columns: 1fr; }
+}
+@media print {
+  body { background: #fff; padding: .5rem; }
+  .banner { display: none; }
+  .card, .card-full, .kcard, .pcard { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="banner">
+    <div>
+      <strong>👥 Gestão do Time — Julho 2026</strong>
+      <span>Documento de gestão · uso restrito da liderança de Marketing</span>
+    </div>
+    <button class="btn btn-outline" onclick="window.print()">🖨 Exportar PDF</button>
+  </div>
+
+  <div class="header">
+    <div>
+      <h1>IPM SISTEMAS · GESTÃO DO TIME DE MARKETING</h1>
+      <p>Demandas · Status de tarefas · Composição da equipe · Reuniões 1:1</p>
+    </div>
+    <div>
+      <span class="mes-badge">JULHO / 2026</span>
+      <div class="resp-line">Responsável: Thalyta Costa · Fonte: ClickUp</div>
+    </div>
+  </div>
+
+  <!-- ══════════ VISÃO GERAL ══════════ -->
+  <p class="sec">Visão Geral do Mês <span class="tag tag-ok">✓ dados ClickUp</span></p>
+  <div class="kgrid-4">
+    <div class="kcard" style="border-color:#3B6D11;border-width:2px">
+      <div class="klbl">Demandas atendidas</div>
+      <div class="kval" style="font-size:32px;color:#3B6D11">203</div>
+      <div class="kdelta up">tarefas concluídas no mês</div>
+    </div>
+    <div class="kcard">
+      <div class="klbl">Taxa de conclusão</div>
+      <div class="kval">100%</div>
+      <div class="kdelta">nenhuma tarefa em aberto</div>
+    </div>
+    <div class="kcard">
+      <div class="klbl">Pessoas no time</div>
+      <div class="kval">8</div>
+      <div class="kdelta up">+2 contratações em julho</div>
+    </div>
+    <div class="kcard">
+      <div class="klbl">Reuniões 1:1</div>
+      <div class="kval">7</div>
+      <div class="kdelta">6 pessoas atendidas</div>
+    </div>
+  </div>
+
+  <div class="card-full">
+    <h3>Status das tarefas — julho</h3>
+    <div class="two-col" style="margin-bottom:0;align-items:center">
+      <div style="position:relative;height:200px"><canvas id="cStatus" role="img" aria-label="Status das tarefas de julho"></canvas></div>
+      <table>
+        <tbody>
+          <tr><td>✓ Concluídas</td><td class="num" style="color:#3B6D11;font-weight:700">203</td><td class="num" style="color:#aaa">98%</td></tr>
+          <tr><td>🗄 Arquivadas</td><td class="num" style="color:#854F0B;font-weight:700">5</td><td class="num" style="color:#aaa">2%</td></tr>
+          <tr><td>○ Não feitas</td><td class="num" style="color:#aaa;font-weight:700">0</td><td class="num" style="color:#aaa">0%</td></tr>
+          <tr><td style="font-weight:700;color:#1a3a6b">Total registrado</td><td class="num" style="color:#1a3a6b;font-weight:700">208</td><td class="num" style="color:#aaa">100%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════ RADAR DA EQUIPE ══════════ -->
+  <p class="sec">Radar da Equipe — Status Individual <span class="tag tag-conf">conteúdo de gestão</span></p>
+  <div class="card-full">
+    <h3>Equipe atual — Julho 2026 · 8 pessoas</h3>
+    <div class="time-grid" id="timeGrid"></div>
+    <div class="legenda">
+      <div><span class="ldot" style="background:#3B6D11"></span>Alta performance · consolidado</div>
+      <div><span class="ldot" style="background:#085041"></span>Consolidado · em consolidação</div>
+      <div><span class="ldot" style="background:#BA7517"></span>Em evolução</div>
+      <div><span class="ldot" style="background:#A32D2D"></span>Em acompanhamento</div>
+      <div><span class="ldot" style="background:#185FA5"></span>Em integração · novato</div>
+    </div>
+  </div>
+
+  <!-- ══════════ MOVIMENTAÇÕES ══════════ -->
+  <p class="sec">Movimentações do Time</p>
+  <div class="two-col">
+    <div class="card">
+      <h3>Entradas e marcos do mês</h3>
+      <div class="mov">
+        <div class="mov-item" style="background:#f0f6fb;border-color:#185FA5">
+          <div class="mico">🟢</div>
+          <div>
+            <div class="mlbl" style="color:#185FA5">Contratação</div>
+            <div class="mtit">Gislaine Delabelli · Copywriter</div>
+            <div class="mdsc">Entrada em julho · 14 demandas no primeiro mês · onboarding em andamento</div>
+          </div>
+        </div>
+        <div class="mov-item" style="background:#f0f6fb;border-color:#185FA5">
+          <div class="mico">🟢</div>
+          <div>
+            <div class="mlbl" style="color:#185FA5">Contratação</div>
+            <div class="mtit">Janaina Bittencourt</div>
+            <div class="mdsc">Entrada em julho · 7 demandas no primeiro mês · onboarding em andamento</div>
+          </div>
+        </div>
+        <div class="mov-item" style="background:#f0faf5;border-color:#3B6D11">
+          <div class="mico">⭐</div>
+          <div>
+            <div class="mlbl" style="color:#3B6D11">Marco de carreira</div>
+            <div class="mtit">Thalyta Costa · Head de Marketing</div>
+            <div class="mdsc">Período de experiência concluído · liderança efetivada</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Saldo do time</h3>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px">
+        <div style="text-align:center;padding:14px 8px;background:#f0faf5;border-radius:8px">
+          <div style="font-size:26px;font-weight:700;color:#3B6D11">+2</div>
+          <div style="font-size:10px;color:#888;margin-top:2px">contratações</div>
+        </div>
+        <div style="text-align:center;padding:14px 8px;background:#fafaf9;border-radius:8px;border:1px solid #eee">
+          <div style="font-size:26px;font-weight:700;color:#888">0</div>
+          <div style="font-size:10px;color:#888;margin-top:2px">desligamentos</div>
+        </div>
+        <div style="text-align:center;padding:14px 8px;background:#f0f5fb;border-radius:8px">
+          <div style="font-size:26px;font-weight:700;color:#1a3a6b">8</div>
+          <div style="font-size:10px;color:#888;margin-top:2px">time total</div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="position:relative;height:150px"><canvas id="cTime" role="img" aria-label="Evolução do tamanho do time"></canvas></div>
+      </div>
+      <div class="nota">
+        <strong>Composição:</strong> 1 gestão · 2 design · 1 social media · 1 vídeo · 1 endomarketing e eventos · 1 copywriting · 1 em definição.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 1:1 ══════════ -->
+  <p class="sec">Reuniões 1:1 — Julho <span class="tag tag-conf">conteúdo de gestão</span></p>
+  <div class="two-col">
+    <div class="card">
+      <h3>Encontros realizados · 7 reuniões</h3>
+      <div class="oneone" id="oneone"></div>
+    </div>
+    <div class="card">
+      <h3>Cobertura de 1:1</h3>
+      <div style="display:flex;align-items:center;gap:16px;margin:6px 0 12px">
+        <div style="position:relative;width:120px;height:120px;flex-shrink:0"><canvas id="cCob" role="img" aria-label="Cobertura de reuniões 1:1"></canvas></div>
+        <div>
+          <div style="font-size:30px;font-weight:700;color:#1a3a6b;line-height:1">86%</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">6 de 7 liderados<br>com 1:1 no mês</div>
+        </div>
+      </div>
+      <div class="nota">
+        <strong>Prioridade do mês:</strong> integração das duas novas contratações e acompanhamento reforçado de Felipe (2 encontros).
+        <br><br><strong>Sem 1:1 em julho:</strong> Eduardo Coelho — evolução observada na rotina e nas entregas do mês. Retomar 1:1 em agosto para registrar formalmente a mudança de status.
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    IPM Sistemas · Equipe de Marketing · Documento de gestão de uso restrito<br>
+    Responsável: Thalyta Costa · Fonte dos dados: ClickUp · Referência: julho/2026
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   ATUALIZAÇÃO MENSAL — edite apenas o bloco DADOS abaixo.
+   Todo o resto do documento é gerado a partir daqui.
+   ═══════════════════════════════════════════════════════════ */
+const DADOS = {
+  mes: "Julho / 2026",
+  pessoas: [
+    { nome: "Mariane Prim",     ini: "MP", cargo: "Endomarketing e Eventos", demandas: 40, arq: 0, status: "Em consolidação",       tipo: "cons" },
+    { nome: "Rafaela Coelho",   ini: "RC", cargo: "Designer · Alta performance", demandas: 33, arq: 0, status: "⭐ Estratégica",     tipo: "alta" },
+    { nome: "Eduardo Coelho",   ini: "EC", cargo: "Designer Gráfico",         demandas: 32, arq: 2, status: "✓ Consolidado",         tipo: "cons" },
+    { nome: "Lucas Zeferino",   ini: "LZ", cargo: "Social Media · Pleno",     demandas: 31, arq: 0, status: "⭐ Autônomo",           tipo: "alta" },
+    { nome: "Felipe Aires",     ini: "FA", cargo: "Videomaker",               demandas: 31, arq: 1, status: "Em acompanhamento",     tipo: "acomp" },
+    { nome: "Gislaine Delabelli",ini: "GD", cargo: "Copywriter · Nova",       demandas: 14, arq: 0, status: "Em integração",         tipo: "novo" },
+    { nome: "Janaina Bittencourt", ini: "JB", cargo: "Nova contratação",      demandas:  7, arq: 0, status: "Em integração",         tipo: "novo" }
+  ],
+  lider: { nome: "Thalyta Costa", ini: "TC", cargo: "Head de Marketing", demandas: 15, arq: 2, status: "✓ Experiência concluída", tipo: "lead" },
+  reunioes: [
+    { ini: "GD", nome: "Gislaine Delabelli", foco: "Integração e alinhamento inicial", qtd: 1 },
+    { ini: "JB", nome: "Janaina Bittencourt", foco: "Integração e alinhamento inicial", qtd: 1 },
+    { ini: "RC", nome: "Rafaela Coelho",     foco: "Atuação estratégica em design",    qtd: 1 },
+    { ini: "LZ", nome: "Lucas Zeferino",     foco: "Autonomia e condução de redes",    qtd: 1 },
+    { ini: "FA", nome: "Felipe Aires",       foco: "Acompanhamento próximo · processo e entregas", qtd: 2 },
+    { ini: "MP", nome: "Mariane Prim",       foco: "Consolidação de endomarketing e eventos", qtd: 1 }
+  ],
+  historicoTime: { labels: ["Maio", "Junho", "Julho"], valores: [7, 6, 8] }
+};
+
+const CORES = {
+  alta: { borda: "#3B6D11", fundo: "#f0faf5", ava: "#3B6D11", pill: "p-alta" },
+  cons: { borda: "#085041", fundo: "#f0faf8", ava: "#085041", pill: "p-cons" },
+  evol: { borda: "#BA7517", fundo: "#fff8f0", ava: "#BA7517", pill: "p-evol" },
+  acomp:{ borda: "#A32D2D", fundo: "#fff5f5", ava: "#A32D2D", pill: "p-acomp" },
+  novo: { borda: "#185FA5", fundo: "#f0f5fb", ava: "#185FA5", pill: "p-novo" },
+  lead: { borda: "#3d3d6b", fundo: "#f7f7fb", ava: "#3d3d6b", pill: "p-lead" }
+};
+
+/* ── Cards da equipe ── */
+(function () {
+  const grid = document.getElementById("timeGrid");
+  const card = p => {
+    const c = CORES[p.tipo];
+    return `<div class="pcard" style="background:${c.fundo};border-color:${c.borda}">
+      <div class="pava" style="background:${c.ava}">${p.ini}</div>
+      <div class="pnome">${p.nome}</div>
+      <div class="pcargo">${p.cargo}</div>
+      <div class="pdem"><strong>${p.demandas}</strong> demandas</div>
+      <span class="pill ${c.pill} pstatus">${p.status}</span>
+    </div>`;
+  };
+  const l = DADOS.lider, cl = CORES[l.tipo];
+  const cardLider = `<div class="pcard lead" style="background:${cl.fundo};border-color:${cl.borda}">
+    <div class="pava" style="background:${cl.ava}">${l.ini}</div>
+    <div>
+      <div class="pnome">${l.nome}</div>
+      <div class="pcargo">${l.cargo}</div>
+      <span class="pill ${cl.pill} pstatus">${l.status}</span>
+    </div>
+    <div class="lead-right">
+      <div style="font-size:20px;font-weight:700;color:#1a3a6b">${l.demandas}</div>
+      <div style="font-size:10px;color:#888">demandas</div>
+    </div>
+  </div>`;
+  grid.innerHTML = DADOS.pessoas.map(card).join("") + cardLider;
+})();
+
+/* ── Lista de 1:1 ── */
+(function () {
+  document.getElementById("oneone").innerHTML = DADOS.reunioes.map(r =>
+    `<div class="oo-row">
+      <div class="oo-ini">${r.ini}</div>
+      <div>
+        <div class="oo-nome">${r.nome}</div>
+        <div class="oo-foco">${r.foco}</div>
+      </div>
+      <div class="oo-qtd">${r.qtd}× 1:1</div>
+    </div>`).join("");
+})();
+
+/* ── Gráfico: status das tarefas ── */
+new Chart(document.getElementById("cStatus"), {
+  type: "doughnut",
+  data: {
+    labels: ["Concluídas", "Arquivadas", "Não feitas"],
+    datasets: [{ data: [203, 5, 0], backgroundColor: ["#3B6D11", "#BA7517", "#e0e0dd"], borderWidth: 3, borderColor: "#fff" }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: "62%",
+    plugins: { legend: { position: "bottom", labels: { font: { size: 11 }, color: "#666", padding: 12, boxWidth: 12 } } }
+  }
+});
+
+/* ── Gráfico: evolução do time ── */
+new Chart(document.getElementById("cTime"), {
+  type: "bar",
+  data: {
+    labels: DADOS.historicoTime.labels,
+    datasets: [{ data: DADOS.historicoTime.valores, backgroundColor: ["#B5D4F4", "#B5D4F4", "#1a3a6b"], borderRadius: 6 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.raw + " pessoas" } } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11 }, color: "#888" } },
+      y: { grid: { color: "rgba(0,0,0,0.05)" }, ticks: { font: { size: 10 }, color: "#888", stepSize: 2 }, beginAtZero: true, max: 10 }
+    }
+  }
+});
+
+/* ── Gráfico: cobertura de 1:1 ── */
+new Chart(document.getElementById("cCob"), {
+  type: "doughnut",
+  data: {
+    labels: ["Com 1:1", "Sem 1:1"],
+    datasets: [{ data: [6, 1], backgroundColor: ["#1a3a6b", "#e0e0dd"], borderWidth: 2, borderColor: "#fff" }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, cutout: "70%", plugins: { legend: { display: false } } }
+});
+</script>
+</body>
+</html>
